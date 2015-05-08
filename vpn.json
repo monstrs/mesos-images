@@ -1,0 +1,42 @@
+{
+  "variables": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": "",
+    "aws_source_ami": "{{env `DEFAULT_IMAGE`}}"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key_id`}}",
+    "secret_key": "{{user `aws_secret_access_key`}}",
+    "region": "us-east-1",
+    "source_ami": "{{user `aws_source_ami`}}",
+    "instance_type": "m1.small",
+    "ssh_username": "ubuntu",
+    "ssh_timeout": "5m",
+    "ami_name": "vpn-{{timestamp}}"
+  }],
+  "push": {
+    "name": "monstrs/mesos-vpn"
+  },
+  "provisioners": [
+    {
+      "type": "chef-solo",
+      "skip_install": true,
+      "cookbook_paths": ["./cookbooks/"],
+      "run_list": [
+        "apt",
+        "pritunl"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "atlas",
+      "artifact": "monstrs/mesos-vpn",
+      "artifact_type": "aws.ami",
+      "metadata": {
+        "created_at": "{{timestamp}}"
+      }
+    }
+  ]
+}
